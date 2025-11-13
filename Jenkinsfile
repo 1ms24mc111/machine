@@ -6,7 +6,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 echo 'Checking out code from SCM...'
-                 git branch: 'main', url:'https://github.com/1ms24mc111/devops.git'
+                 git branch: 'main', url:'https://github.com/1ms24mc111/machine.git'
             }
         }
 
