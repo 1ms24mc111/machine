@@ -1,0 +1,7 @@
+# requirements.txt
+# Specify required Python packages and optionally their versions
+scikit-learn
+pytest
+pandas
+numpy
+joblib
