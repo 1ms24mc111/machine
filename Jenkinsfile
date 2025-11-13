@@ -1,47 +1,48 @@
-// Updated and enhanced Jenkinsfile
+// Updated Jenkinsfile to use a virtual environment (Recommended)
 pipeline {
-    agent any // Use 'any' agent available to run the pipeline
+    agent any
+
+    environment {
+        // Define the path for the virtual environment
+        VENV_DIR = '.venv' 
+    }
 
     stages {
+        // ... (Checkout Code stage remains the same) ...
         stage('Checkout Code') {
             steps {
                 echo 'Checking out code from SCM...'
-                // Explicitly defining the SCM checkout using the 'git' step
-                // This replaces the default implicit checkout, ensuring correct branch handling.
                 git branch: 'main', url:'https://github.com/1ms24mc111/machine.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing Python dependencies...'
+                echo 'Setting up virtual environment and installing dependencies...'
                 
-                // Use 'python3' and 'pip3' for modern systems to avoid 'python: not found' errors
-                sh 'python3 -m pip install --upgrade pip' // Ensure pip is updated
-
-                // Install libraries listed in requirements.txt
-                sh 'pip3 install -r requirements.txt' 
+                // 1. Create the virtual environment using python3
+                sh 'python3 -m venv $VENV_DIR'
+                
+                // 2. Activate the venv and upgrade pip (commands change slightly when in a venv)
+                sh '. $VENV_DIR/bin/activate && pip install --upgrade pip'
+                
+                // 3. Install requirements using the venv's pip
+                sh '. $VENV_DIR/bin/activate && pip install -r requirements.txt' 
             }
         }
 
         stage('Run Model Tests') {
             steps {
-                echo 'Executing machine learning tests with pytest...'
-                
-                // Assuming 'pytest' is installed globally or in the path accessible by Jenkins
-                // If pytest is not found, you might need 'sh "$HOME/.local/bin/pytest ..."' or 'sh "$(pip3 show pytest | grep Location | cut -d' ' -f2)/pytest ..."'
-                sh 'pytest test.py --junitxml=test-results.xml' 
+                echo 'Executing machine learning tests with pytest using the virtual environment...'
+                // Run pytest using the executable within the virtual environment
+                sh '. $VENV_DIR/bin/activate && pytest test.py --junitxml=test-results.xml' 
             }
         }
         
         stage('Publish Test Results') {
             steps {
                 echo 'Publishing test results for display in Jenkins UI...'
-                
-                // Use the JUnit plugin to archive and display the results
                 junit 'test-results.xml'
-                
-                // Optional: Archive the generated model file as an artifact
                 archiveArtifacts artifacts: 'model.pkl', onlyIfSuccessful: true
             }
         }
